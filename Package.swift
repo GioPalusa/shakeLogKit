@@ -4,20 +4,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "ShakeLogKit",
-    products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "ShakeLogKit",
-            targets: ["ShakeLogKit"]),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "ShakeLogKit"),
-        .testTarget(
-            name: "ShakeLogKitTests",
-            dependencies: ["ShakeLogKit"]),
-    ]
+	name: "ShakeLogKit",
+	platforms: [
+		.iOS(.v15)
+	],
+	products: [
+		.library(
+			name: "ShakeLogKit",
+			targets: ["ShakeLogKit"])
+	],
+	targets: [
+		.target(
+			name: "ShakeLogKit",
+			dependencies: []),
+		.testTarget(
+			name: "ShakeLogKitTests",
+			dependencies: ["ShakeLogKit"])
+	]
 )
