@@ -16,15 +16,16 @@ struct ShakeLogDetailView: View {
 	var body: some View {
 		ScrollView {
 			VStack(alignment: .leading, spacing: 10) {
-				Text(log.composedMessage)
-					.padding()
-					.background(Color.black)
-					.foregroundColor(Color.white)
-					.font(.system(.body, design: .monospaced))
-					.frame(maxWidth: .infinity, alignment: .leading)
+				if let jsonData = log.composedMessage.data(using: .utf8), let jsonString = prettyPrintJSON(jsonData) {
+					JSONHighlightView(jsonString: jsonString)
+				} else {
+					Text(log.composedMessage)
+						.padding()
+						.font(.system(.body, design: .monospaced))
+						.frame(maxWidth: .infinity, alignment: .leading)
+				}
 
 				Divider()
-					.background(Color.white)
 
 				VStack(alignment: .leading, spacing: 16) {
 					infoText(title: "Timestamp", body: log.date.formatted())
@@ -37,14 +38,11 @@ struct ShakeLogDetailView: View {
 					infoText(title: "Sender", body: log.sender)
 				}
 				.padding()
-				.background(Color.black)
-				.foregroundColor(Color.white)
 				.font(.system(.body, design: .monospaced))
 				.frame(maxWidth: .infinity, alignment: .leading)
 			}
 			.padding()
 		}
-		.background(Color.black)
 		.navigationBarTitle("Log Detail", displayMode: .inline)
 		.navigationBarItems(trailing: Button(action: {
 			exportLog(log)
@@ -63,19 +61,22 @@ struct ShakeLogDetailView: View {
 	}
 
 	private func exportLog(_ log: OSLogEntryLog) {
-		let fileName = "log.log"
-		let logText = log.composedMessage
-		let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 		do {
-			try logText.write(to: url, atomically: true, encoding: .utf8)
-			exportData = url
+			exportData = try ShakeLogExporter.exportLogs([log])
 			showingExportSheet = true
 		} catch {
-			print("Failed to write log file: \(error)")
+			print("Failed to export log: \(error)")
 		}
 	}
-}
 
-#Preview {
-	ShakeLogDetailView(log: OSLogEntryLog())
+	private func prettyPrintJSON(_ jsonData: Data) -> String? {
+		do {
+			let jsonObject = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers)
+			let prettyJsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
+			return String(data: prettyJsonData, encoding: .utf8)
+		} catch {
+			print("Failed to pretty print JSON: \(error)")
+			return nil
+		}
+	}
 }

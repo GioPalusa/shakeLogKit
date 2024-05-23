@@ -10,11 +10,12 @@ import SwiftUI
 public struct ShakeLogModifier: ViewModifier {
 	private let settings: ShakeLogSettings?
 	@Binding private var isEnabled: Bool
-	@State private var showingLogs = false
+	@Binding private var showingLogs: Bool
 
-	init(settings: ShakeLogSettings?, isEnabled: Binding<Bool>) {
+	init(settings: ShakeLogSettings?, isEnabled: Binding<Bool>, showingLogs: Binding<Bool>) {
 		self.settings = settings
 		self._isEnabled = isEnabled
+		self._showingLogs = showingLogs
 	}
 
 	public func body(content: Content) -> some View {
@@ -29,27 +30,21 @@ public struct ShakeLogModifier: ViewModifier {
 					}
 				}
 			}
-			.sheet(isPresented: bindingToShowLogs) {
-				ShakeLogView(timeInterval: settings?.timeInterval ?? -3600, subsystem: settings?.subsystem)
+			.fullScreenCover(isPresented: $showingLogs) {
+				ShakeLogView(timeInterval: settings?.timeInterval ?? -3600, subsystem: settings?.subsystem, isPresented: $showingLogs)
 			}
 			.environment(\.shakeLogSettings, settings)
-	}
-
-	private var bindingToShowLogs: Binding<Bool> {
-		if let shouldShowLogs = settings?.shouldShowLogs {
-			return Binding(get: { shouldShowLogs }, set: { settings?.shouldShowLogs = $0 })
-		} else {
-			return isEnabled ? $showingLogs : .constant(false)
-		}
 	}
 }
 
 public extension View {
 	/// Enables shake logging on the view.
-	/// - Parameter settings: The settings for configuring shake logging.
-	/// - Parameter isEnabled: A binding if the feature is active or not. Defaults to true.
+	/// - Parameters:
+	///   - settings: The settings for configuring shake logging.
+	///   - isEnabled: A binding to control if the feature is active or not. Defaults to true.
+	///   - showingLogs: A binding to control the presentation of the logs view.
 	/// - Returns: A view with shake logging enabled.
-	func enableShakeLogging(_ settings: ShakeLogSettings? = nil, isEnabled: Binding<Bool> = .constant(true)) -> some View {
-		self.modifier(ShakeLogModifier(settings: settings, isEnabled: isEnabled))
+	func enableShakeLogging(_ settings: ShakeLogSettings? = nil, isEnabled: Binding<Bool> = .constant(true), showingLogs: Binding<Bool>) -> some View {
+		self.modifier(ShakeLogModifier(settings: settings, isEnabled: isEnabled, showingLogs: showingLogs))
 	}
 }

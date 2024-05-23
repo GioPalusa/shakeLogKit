@@ -5,11 +5,12 @@
 //  Created by Giovanni Palusa on 2024-05-22.
 //
 
-import SwiftUI
 import OSLog
+import SwiftUI
 
 public struct ShakeLogView: View {
 	@Environment(\.presentationMode) var presentationMode
+	@Binding var isPresented: Bool
 	@State private var logs: [OSLogEntryLog] = []
 	@State private var searchText: String = ""
 	@State private var selectedLogType: LogType = .all
@@ -22,9 +23,11 @@ public struct ShakeLogView: View {
 	/// - Parameters:
 	///   - timeInterval: The time interval to fetch logs from.
 	///   - subsystem: Subsystem name to filter logs by.
-	public init(timeInterval: TimeInterval = -3600, subsystem: String? = nil) {
+	///   - isPresented: Binding to control the presentation of the view.
+	public init(timeInterval: TimeInterval = -3600, subsystem: String? = nil, isPresented: Binding<Bool>) {
 		self.timeInterval = timeInterval
 		self.subsystem = subsystem
+		self._isPresented = isPresented
 	}
 
 	public var body: some View {
@@ -41,27 +44,24 @@ public struct ShakeLogView: View {
 				List(filteredLogs.reversed(), id: \.self) { log in
 					NavigationLink(destination: ShakeLogDetailView(log: log)) {
 						Text(log.composedMessage)
-							.background(Color.black)
-							.foregroundColor(Color.white)
 							.font(.system(.body, design: .monospaced))
 							.frame(maxWidth: .infinity, alignment: .leading)
 							.lineLimit(4)
 					}
-					.listRowBackground(Color.black)
 				}
 				.searchable(text: $searchText)
-				.navigationBarItems(trailing: HStack {
+				.navigationBarItems(leading:
 					Button(action: {
-						presentationMode.wrappedValue.dismiss()
+						isPresented.toggle()
 					}) {
 						Text("Dismiss")
-					}
+					}, trailing:
 					Button(action: {
 						exportLogs(logs)
 					}) {
 						Image(systemName: "square.and.arrow.up")
-					}
-				})
+					})
+
 				.onChange(of: showingExportSheet) { value in
 					guard value == true, let exportData = exportData else { return }
 					presentShakeShareSheet(fileURL: exportData)
@@ -95,15 +95,11 @@ public struct ShakeLogView: View {
 	}
 
 	private func exportLogs(_ logs: [OSLogEntryLog]) {
-		let fileName = "logs.log"
-		let logText = logs.map { $0.composedMessage }.joined(separator: "\n")
-		let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 		do {
-			try logText.write(to: url, atomically: true, encoding: .utf8)
-			exportData = url
+			exportData = try ShakeLogExporter.exportLogs(logs)
 			showingExportSheet = true
 		} catch {
-			print("Failed to write log file: \(error)")
+			print("Failed to export logs: \(error)")
 		}
 	}
 }
@@ -132,5 +128,5 @@ enum LogType: String, CaseIterable {
 }
 
 #Preview {
-	ShakeLogView()
+	ShakeLogView(isPresented: .constant(true))
 }
