@@ -13,7 +13,7 @@ extension UIDevice {
 }
 
 extension UIWindow {
-	override open func motionEnded(_ motion: UIEvent.EventSubtype, with: UIEvent?) {
+	override open func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
 		guard motion == .motionShake else { return }
 
 		NotificationCenter.default.post(name: UIDevice.ShakeLogDeviceDidShake, object: nil)
@@ -21,12 +21,10 @@ extension UIWindow {
 }
 
 struct ShakeGestureViewModifier: ViewModifier {
-	// 1
 	let action: () -> Void
 
 	func body(content: Content) -> some View {
 		content
-		// 2
 			.onReceive(NotificationCenter.default.publisher(for: UIDevice.ShakeLogDeviceDidShake)) { _ in
 				action()
 			}

@@ -7,6 +7,7 @@
 - Detect shake gestures and trigger custom actions.
 - Log messages using `OSLog`.
 - Display logs in a SwiftUI sheet when the device is shaken.
+- Customize logging settings including time intervals, subsystem filters, and shake gesture usage.
 
 ## Requirements
 
@@ -25,5 +26,140 @@ Alternatively, add the following line to your `Package.swift`:
 
 ```swift
 dependencies: [
-	.package(url: "https://github.com/your-repo/ShakeLogKit.git", from: "1.0.0")
+    .package(url: "https://github.com/GioPalusa/shakeLogKit/")
 ]
+```
+
+## Usage
+
+### Basic Setup
+
+1. **Import ShakeLogKit:**
+
+   ```swift
+   import ShakeLogKit
+   ```
+
+2. **Enable Shake Logging:**
+
+   In your SwiftUI view, apply the `enableShakeLogging` modifier:
+
+   ```swift
+   struct ContentView: View {
+       var body: some View {
+           Text("Hello, World!")
+               .enableShakeLogging()
+       }
+   }
+   ```
+
+   This will use the default settings which logs messages and displays them in a sheet when the device is shaken.
+
+### Advanced Setup
+
+1. **Define ShakeLogSettings:**
+
+   Create an instance of `ShakeLogSettings` to customize the logging behavior:
+
+   ```swift
+   import SwiftUI
+   import ShakeLogKit
+
+   @State private var shouldShowLogs = false
+   @State private var isEnabled = true
+
+   let settings = ShakeLogSettings(
+       timeInterval: -3600,             // Fetch logs from the last hour
+       useShake: true,                  // Enable shake gesture to show logs
+       subsystem: "com.example.app",    // Filter logs by subsystem
+       shouldShowLogs: $shouldShowLogs, // Binding to control log display, from a button or a state
+       isEnabled: $isEnabled            // Binding to enable or disable logging
+   )
+   ```
+
+2. **Apply Settings:**
+
+   Pass the settings to the `enableShakeLogging` modifier:
+
+   ```swift
+   struct ContentView: View {
+       @State private var shouldShowLogs = false
+       @State private var isEnabled = true
+
+       var body: some View {
+           Text("Hello, World!")
+               .enableShakeLogging(ShakeLogSettings(
+                   timeInterval: -3600,
+                   useShake: true,
+                   subsystem: "com.example.app",
+                   shouldShowLogs: $shouldShowLogs,
+                   isEnabled: $isEnabled
+               ))
+       }
+   }
+   ```
+
+### Logging Messages
+
+Use the `ShakeLogFileManager` to log messages:
+
+```swift
+import ShakeLogKit
+
+ShakeLogFileManager.shared.log("This is a test log message.")
+```
+
+### Viewing Logs
+
+When the device is shaken, the logs will be displayed in a SwiftUI sheet if logging is enabled. The logs can be filtered by type and searched using the provided interface.
+
+## Example
+
+Here is a complete example of how to set up and use `ShakeLogKit` in an iOS application:
+
+```swift
+import SwiftUI
+import ShakeLogKit
+
+@main
+struct MyApp: App {
+    @State private var shouldShowLogs = false
+    @State private var isEnabled = true
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .enableShakeLogging(ShakeLogSettings(
+                    timeInterval: -3600,
+                    useShake: true,
+                    subsystem: "com.example.app",
+                    shouldShowLogs: $shouldShowLogs,
+                    isEnabled: $isEnabled
+                ))
+        }
+    }
+}
+
+struct ContentView: View {
+    @State private var shouldShowLogs = false
+    @State private var isEnabled = true
+
+    var body: some View {
+        VStack {
+            Text("Main Content")
+                .padding()
+
+            Button("Log a Message") {
+                ShakeLogFileManager.shared.log("This is a test log message.")
+            }
+        }
+        .enableShakeLogging(ShakeLogSettings(
+            timeInterval: -3600,
+            useShake: true,
+            subsystem: "com.example.app",
+            shouldShowLogs: $shouldShowLogs,
+            isEnabled: $isEnabled
+        ))
+    }
+}
+```

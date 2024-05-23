@@ -15,19 +15,24 @@ public struct ShakeLogView: View {
 	@State private var selectedLogType: LogType = .all
 	@State private var showingExportSheet = false
 	@State private var exportData: URL?
+	private var timeInterval: TimeInterval
+	private var subsystem: String?
 
-	public init() {}
+	public init(timeInterval: TimeInterval = -3600, subsystem: String? = nil) {
+		self.timeInterval = timeInterval
+		self.subsystem = subsystem
+	}
 
 	public var body: some View {
 		NavigationView {
 			VStack {
 				Picker("Log Type", selection: $selectedLogType) {
-					ForEach(LogType.allCases, id: \.self) { type in
-						Text(type.rawValue).tag(type)
+					ForEach(LogType.allCases.filter { $0 != .subSystem || subsystem != nil }, id: \.self) { type in
+						Text(type.displayName).tag(type)
 					}
 				}
 				.pickerStyle(SegmentedPickerStyle())
-				.padding(.horizontal)
+				.padding(.horizontal, subsystem == nil ? 16 : 0)
 
 				List(filteredLogs.reversed(), id: \.self) { log in
 					NavigationLink(destination: ShakeLogDetailView(log: log)) {
@@ -61,7 +66,7 @@ public struct ShakeLogView: View {
 			}
 		}
 		.task {
-			logs = await ShakeLogFileManager.shared.fetchShakeLogs()
+			logs = await ShakeLogFileManager.shared.fetchShakeLogs(timeInterval: timeInterval, subsystem: subsystem)
 		}
 	}
 
@@ -76,12 +81,13 @@ public struct ShakeLogView: View {
 			filteredByType = logs.filter { $0.level == .error }
 		case .debug:
 			filteredByType = logs.filter { $0.level == .debug }
+		case .subSystem:
+			filteredByType = logs.filter { $0.subsystem == subsystem }
 		}
-		if searchText.isEmpty {
-			return filteredByType
-		} else {
+		if !searchText.isEmpty {
 			return filteredByType.filter { $0.composedMessage.localizedCaseInsensitiveContains(searchText) }
 		}
+		return filteredByType
 	}
 
 	private func exportLogs(_ logs: [OSLogEntryLog]) {
@@ -99,10 +105,26 @@ public struct ShakeLogView: View {
 }
 
 enum LogType: String, CaseIterable {
-	case all = "All"
-	case info = "Info"
-	case error = "Error"
-	case debug = "Debug"
+	case all
+	case info
+	case error
+	case debug
+	case subSystem
+
+	var displayName: String {
+		switch self {
+		case .all:
+			return "All"
+		case .info:
+			return "Info"
+		case .error:
+			return "Error"
+		case .debug:
+			return "Debug"
+		case .subSystem:
+			return "Subsystem"
+		}
+	}
 }
 
 #Preview {

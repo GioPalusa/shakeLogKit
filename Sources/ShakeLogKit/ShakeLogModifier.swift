@@ -8,39 +8,42 @@
 import SwiftUI
 
 public struct ShakeLogModifier: ViewModifier {
+	private let settings: ShakeLogSettings?
 	@State private var showingLogs = false
 
-	public init() {}
+	public init(settings: ShakeLogSettings?) {
+		self.settings = settings
+	}
 
 	public func body(content: Content) -> some View {
 		content
 			.onShakeGesture {
-				showingLogs = true
+				guard settings?.isEnabled ?? false else { return }
+				if settings?.useShake ?? true {
+					if settings?.shouldShowLogs == nil {
+						showingLogs = true
+					} else {
+						settings?.shouldShowLogs = true
+					}
+				}
 			}
-			.sheet(isPresented: $showingLogs) {
-				ShakeLogView()
+			.sheet(isPresented: bindingToShowLogs) {
+				ShakeLogView(timeInterval: settings?.timeInterval ?? -3600, subsystem: settings?.subsystem)
 			}
+			.environment(\.shakeLogSettings, settings)
+	}
+
+	private var bindingToShowLogs: Binding<Bool> {
+		if let shouldShowLogs = settings?.shouldShowLogs {
+			return Binding(get: { shouldShowLogs }, set: { settings?.shouldShowLogs = $0 })
+		} else {
+			return $showingLogs
+		}
 	}
 }
 
 public extension View {
-	func enableShakeLogging() -> some View {
-		modifier(ShakeLogModifier())
+	func enableShakeLogging(_ settings: ShakeLogSettings? = nil) -> some View {
+		self.modifier(ShakeLogModifier(settings: settings))
 	}
-}
-
-private struct WindowAccessor: UIViewRepresentable {
-	var callback: (UIWindow) -> Void
-
-	func makeUIView(context: Context) -> UIView {
-		let view = UIView()
-		DispatchQueue.main.async {
-			if let window = view.window {
-				callback(window)
-			}
-		}
-		return view
-	}
-
-	func updateUIView(_ uiView: UIView, context: Context) {}
 }
