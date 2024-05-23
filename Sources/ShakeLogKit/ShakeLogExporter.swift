@@ -13,9 +13,9 @@ public struct ShakeLogExporter {
 
 	/// Exports logs to a file.
 	/// - Parameter logs: The array of OSLogEntryLog to be exported.
-	/// - Returns: The URL of the exported file.
+	/// - Returns: The `Data` of the exported file.
 	/// - Throws: An error if the file could not be written.
-	public static func exportLogs(_ logs: [OSLogEntryLog]) throws -> URL {
+	public static func exportLogs(_ logs: [OSLogEntryLog]) async throws -> Data? {
 		let logText = logs.map { logEntry in
 			let dateFormatter = ISO8601DateFormatter()
 			let dateStr = dateFormatter.string(from: logEntry.date)
@@ -24,10 +24,7 @@ public struct ShakeLogExporter {
 			"""
 		}.joined(separator: "\n")
 
-		let fileName = "logs.log"
-		let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-		try logText.write(to: url, atomically: true, encoding: .utf8)
-		return url
+		return logText.data(using: .utf8)
 	}
 
 	/// Reads logs from a file.

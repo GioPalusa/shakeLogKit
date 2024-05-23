@@ -10,12 +10,12 @@ import OSLog
 
 public class ShakeLogFileManager {
 	public static let shared = ShakeLogFileManager()
-	private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "ShakeLog")
+	private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ShakeLog", category: "ShakeLog")
 
 	private init() {}
 
-	public func log(_ message: String) {
-		logger.log("\(message, privacy: .public)")
+	public func log(_ message: String, level: OSLogType = .debug) {
+		logger.log(level: level, "\(message, privacy: .public)")
 	}
 
 	public func fetchShakeLogs(timeInterval: TimeInterval, subsystem: String? = nil) async -> [OSLogEntryLog] {

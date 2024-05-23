@@ -12,7 +12,7 @@
 ## Requirements
 
 - iOS 15.0+
-- Swift 5.3+
+- Swift 5.9+
 
 ## Installation
 
@@ -46,9 +46,11 @@ dependencies: [
 
    ```swift
    struct ContentView: View {
+       @State private var showingLogs = false
+       
        var body: some View {
            Text("Hello, World!")
-               .enableShakeLogging()
+               .enableShakeLogging(showingLogs: $showingLogs)
        }
    }
    ```
@@ -83,6 +85,7 @@ dependencies: [
    struct ContentView: View {
        @State private var shouldShowLogs: Bool? = nil
        @State private var isEnabled = true
+       @State private var showingLogs = false
 
        var body: some View {
            Text("Hello, World!")
@@ -93,7 +96,8 @@ dependencies: [
                        subsystem: "com.example.app",
                        shouldShowLogs: $shouldShowLogs
                    ),
-                   isEnabled: $isEnabled
+                   isEnabled: $isEnabled,
+                   showingLogs: $showingLogs
                )
        }
    }
@@ -125,6 +129,7 @@ import ShakeLogKit
 struct MyApp: App {
     @State private var shouldShowLogs: Bool? = nil
     @State private var isEnabled = true
+    @State private var showingLogs = false
 
     var body: some Scene {
         WindowGroup {
@@ -136,7 +141,8 @@ struct MyApp: App {
                         subsystem: "com.example.app",
                         shouldShowLogs: $shouldShowLogs
                     ),
-                    isEnabled: $isEnabled
+                    isEnabled: $isEnabled,
+                    showingLogs: $showingLogs
                 )
         }
     }
@@ -145,6 +151,7 @@ struct MyApp: App {
 struct ContentView: View {
     @State private var shouldShowLogs: Bool? = nil
     @State private var isEnabled = true
+    @State private var showingLogs = false
 
     var body: some View {
         VStack {
@@ -162,7 +169,8 @@ struct ContentView: View {
                 subsystem: "com.example.app",
                 shouldShowLogs: $shouldShowLogs
             ),
-            isEnabled: $isEnabled
+            isEnabled: $isEnabled,
+            showingLogs: $showingLogs
         )
     }
 }
@@ -171,3 +179,32 @@ struct ContentView: View {
 ## License
 
 ShakeLogKit is released under the MIT license.
+
+```swift
+// swift-tools-version: 5.9
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import PackageDescription
+
+let package = Package(
+	name: "ShakeLogKit",
+	platforms: [
+		.iOS(.v15)
+	],
+	products: [
+		.library(
+			name: "ShakeLogKit",
+			targets: ["ShakeLogKit"])
+	],
+	targets: [
+		.target(
+			name: "ShakeLogKit",
+			dependencies: []),
+		.testTarget(
+			name: "ShakeLogKitTests",
+			dependencies: ["ShakeLogKit"])
+	]
+)
+```
+
+Feel free to make any additional adjustments to fit your specific needs.

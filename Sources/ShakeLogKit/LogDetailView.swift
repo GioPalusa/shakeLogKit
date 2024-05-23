@@ -11,6 +11,8 @@ import OSLog
 struct ShakeLogDetailView: View {
 	var log: OSLogEntryLog
 	@Binding var filter: LogFilter?
+	@State private var showingExportSheet = false
+	@State private var exportData: Data?
 
 	var body: some View {
 		ScrollView {
@@ -43,6 +45,11 @@ struct ShakeLogDetailView: View {
 		}) {
 			Image(systemName: "square.and.arrow.up")
 		})
+		.onChange(of: showingExportSheet) { value in
+			guard value == true, let exportData = exportData else { return }
+			presentShareSheet(exportData, fileName: "\(log.processIdentifier)_\(Date().formatted(date: .numeric, time: .omitted)).log")
+			showingExportSheet = false
+		}
 	}
 
 	private func logDetailRow(title: String, value: String, filter: LogFilter) -> some View {
@@ -76,6 +83,13 @@ struct ShakeLogDetailView: View {
 	}
 
 	private func exportLog(_ log: OSLogEntryLog) {
-		// Your export logic here
+		Task {
+			do {
+				exportData = try await ShakeLogExporter.exportLogs([log])
+				showingExportSheet = true
+			} catch {
+				print("Failed to export logs: \(error)")
+			}
+		}
 	}
 }

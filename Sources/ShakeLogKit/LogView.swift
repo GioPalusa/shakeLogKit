@@ -15,8 +15,9 @@ public struct ShakeLogView: View {
 	@State private var searchText: String = ""
 	@State private var selectedLogType: LogType = .all
 	@State private var showingExportSheet = false
-	@State private var exportData: URL?
+	@State private var exportData: Data?
 	@State private var filter: LogFilter?
+	@State private var isLoading: Bool = false
 	private var timeInterval: TimeInterval
 	private var subsystem: String?
 
@@ -34,63 +35,75 @@ public struct ShakeLogView: View {
 	public var body: some View {
 		NavigationView {
 			VStack {
-				if filter == nil {
-					Picker("Log Type", selection: $selectedLogType) {
-						ForEach(LogType.allCases.filter { $0 != .subSystem || subsystem != nil }, id: \.self) { type in
-							Text(type.displayName).tag(type)
+				if !isLoading {
+					if filter == nil {
+						Picker("Log Type", selection: $selectedLogType) {
+							ForEach(LogType.allCases.filter { $0 != .subSystem || subsystem != nil }, id: \.self) { type in
+								Text(type.displayName).tag(type)
+							}
+						}
+						.pickerStyle(SegmentedPickerStyle())
+						.padding(.horizontal, subsystem == nil ? 16 : 0)
+					} else {
+						HStack {
+							Image(systemName: "line.3.horizontal.decrease.circle")
+								.foregroundStyle(.teal)
+							Text("\(filterDescription)")
+								.foregroundStyle(.teal)
+							Button(action: {
+								filter = nil
+							}, label: {
+								Image(systemName: "clear")
+									.font(.title3)
+							})
+							.foregroundStyle(.red)
+							.padding(.leading, 8)
+						}
+						.padding(.horizontal, 16)
+					}
+					List(filteredLogs.reversed(), id: \.self) { log in
+						NavigationLink(destination: ShakeLogDetailView(log: log, filter: $filter)) {
+							Text(log.composedMessage)
+								.font(.system(.body, design: .monospaced))
+								.frame(maxWidth: .infinity, alignment: .leading)
+								.lineLimit(4)
 						}
 					}
-					.pickerStyle(SegmentedPickerStyle())
-					.padding(.horizontal, subsystem == nil ? 16 : 0)
-				} else {
-					HStack {
-						Image(systemName: "line.3.horizontal.decrease.circle")
-							.foregroundStyle(.teal)
-						Text("\(filterDescription)")
-							.foregroundStyle(.teal)
+					.searchable(text: $searchText)
+					.navigationBarItems(leading:
 						Button(action: {
-							filter = nil
-						}, label: {
-							Image(systemName: "clear")
-								.font(.title3)
+							isPresented.toggle()
+						}) {
+							Text("Dismiss")
+						}, trailing:
+						Button(action: {
+							exportLogs(logs)
+						}) {
+							Image(systemName: "square.and.arrow.up")
 						})
-						.foregroundStyle(.red)
-						.padding(.leading, 8)
+
+					.onChange(of: showingExportSheet) { value in
+						guard value == true, let exportData = exportData else { return }
+						presentShareSheet(exportData, fileName: "Logs_\(Date().formatted(date: .numeric, time: .omitted)).log")
+						showingExportSheet = false
 					}
-					.padding(.horizontal, 16)
-
-				}
-
-				List(filteredLogs.reversed(), id: \.self) { log in
-					NavigationLink(destination: ShakeLogDetailView(log: log, filter: $filter)) {
-						Text(log.composedMessage)
-							.font(.system(.body, design: .monospaced))
-							.frame(maxWidth: .infinity, alignment: .leading)
-							.lineLimit(4)
-					}
-				}
-				.searchable(text: $searchText)
-				.navigationBarItems(leading:
-										Button(action: {
-					isPresented.toggle()
-				}) {
-					Text("Dismiss")
-				}, trailing:
-										Button(action: {
-					exportLogs(logs)
-				}) {
-					Image(systemName: "square.and.arrow.up")
-				})
-
-				.onChange(of: showingExportSheet) { value in
-					guard value == true, let exportData = exportData else { return }
-					presentShakeShareSheet(fileURL: exportData)
-					showingExportSheet = false
+				} else {
+					Text("Loading").font(.title)
+					ProgressView().progressViewStyle(.circular)
+						.padding(.bottom, 32)
+					Button(action: {
+						isPresented.toggle()
+					}, label: {
+						Text("DISMISS")
+							.foregroundStyle(.red)
+					})
 				}
 			}
 		}
 		.task {
+			isLoading = true
 			logs = await ShakeLogFileManager.shared.fetchShakeLogs(timeInterval: timeInterval, subsystem: subsystem)
+			isLoading = false
 		}
 	}
 
@@ -144,11 +157,13 @@ public struct ShakeLogView: View {
 	}
 
 	private func exportLogs(_ logs: [OSLogEntryLog]) {
-		do {
-			exportData = try ShakeLogExporter.exportLogs(logs)
-			showingExportSheet = true
-		} catch {
-			print("Failed to export logs: \(error)")
+		Task {
+			do {
+				exportData = try await ShakeLogExporter.exportLogs(logs)
+				showingExportSheet = true
+			} catch {
+				print("Failed to export logs: \(error)")
+			}
 		}
 	}
 }
