@@ -15,29 +15,51 @@ struct LogDetailView: View {
 
 	var body: some View {
 		ScrollView {
-			Text(log.composedMessage)
+			VStack(alignment: .leading, spacing: 10) {
+				Text(log.composedMessage)
+					.padding()
+					.background(Color.black)
+					.foregroundColor(Color.white)
+					.font(.system(.body, design: .monospaced))
+					.frame(maxWidth: .infinity, alignment: .leading)
+
+				Divider()
+					.background(Color.white)
+
+				VStack(alignment: .leading, spacing: 16) {
+					infoText(title: "Timestamp", body: log.date.formatted())
+					infoText(title: "Category", body: log.category)
+					infoText(title: "Subsystem", body: log.subsystem)
+					infoText(title: "Process", body: log.process)
+					infoText(title: "Thread", body: String(log.threadIdentifier))
+					infoText(title: "Activity ID", body: String(log.activityIdentifier))
+					infoText(title: "Process ID", body: String(log.processIdentifier))
+					infoText(title: "Sender", body: log.sender)
+				}
 				.padding()
 				.background(Color.black)
 				.foregroundColor(Color.white)
 				.font(.system(.body, design: .monospaced))
 				.frame(maxWidth: .infinity, alignment: .leading)
+			}
+			.padding()
 		}
 		.background(Color.black)
 		.navigationBarTitle("Log Detail", displayMode: .inline)
 		.navigationBarItems(trailing: Button(action: {
 			exportLog(log)
 		}) {
-			Text("Export")
-				.padding(4)
-				.background(Color.blue)
-				.foregroundColor(.white)
-				.cornerRadius(8)
+			Image(systemName: "square.and.arrow.up")
 		})
 		.onChange(of: showingExportSheet) { value in
 			guard value == true, let exportData = exportData else { return }
 			presentShareSheet(fileURL: exportData)
 			showingExportSheet = false
 		}
+	}
+
+	private func infoText(title: String, body: String) -> Text {
+		Text("\(title)\n").bold() + Text(body)
 	}
 
 	private func exportLog(_ log: OSLogEntryLog) {
@@ -52,4 +74,8 @@ struct LogDetailView: View {
 			print("Failed to write log file: \(error)")
 		}
 	}
+}
+
+#Preview {
+	LogDetailView(log: OSLogEntryLog())
 }

@@ -46,19 +46,11 @@ public struct LogView: View {
 						presentationMode.wrappedValue.dismiss()
 					}) {
 						Text("Dismiss")
-							.padding(4)
-							.background(Color.red)
-							.foregroundColor(.white)
-							.cornerRadius(8)
 					}
 					Button(action: {
 						exportLogs(logs)
 					}) {
-						Text("Export")
-							.padding(4)
-							.background(Color.blue)
-							.foregroundColor(.white)
-							.cornerRadius(8)
+						Image(systemName: "square.and.arrow.up")
 					}
 				})
 				.onChange(of: showingExportSheet) { value in
