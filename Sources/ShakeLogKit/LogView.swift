@@ -18,6 +18,10 @@ public struct ShakeLogView: View {
 	private var timeInterval: TimeInterval
 	private var subsystem: String?
 
+	/// Initializes a new instance of ShakeLogView.
+	/// - Parameters:
+	///   - timeInterval: The time interval to fetch logs from.
+	///   - subsystem: Subsystem name to filter logs by.
 	public init(timeInterval: TimeInterval = -3600, subsystem: String? = nil) {
 		self.timeInterval = timeInterval
 		self.subsystem = subsystem

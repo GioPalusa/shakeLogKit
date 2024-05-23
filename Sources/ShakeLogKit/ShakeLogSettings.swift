@@ -8,12 +8,24 @@
 import SwiftUI
 
 public struct ShakeLogSettings {
+	/// The time interval to fetch logs from.
 	public var timeInterval: TimeInterval
+	/// Whether to use shake gesture to trigger log display.
 	public var useShake: Bool
+	/// Subsystem name to filter logs by.
 	public var subsystem: String?
+	/// Binding to control whether the logs should be shown.
 	@Binding public var shouldShowLogs: Bool?
+	/// Binding to control whether logging is enabled.
 	@Binding public var isEnabled: Bool
 
+	/// Initializes a new instance of ShakeLogSettings.
+	/// - Parameters:
+	///   - timeInterval: The time interval to fetch logs from.
+	///   - useShake: Whether to use shake gesture to trigger log display.
+	///   - subsystem: Subsystem name to filter logs by.
+	///   - shouldShowLogs: Binding to control whether the logs should be shown.
+	///   - isEnabled: Binding to control whether logging is enabled.
 	public init(timeInterval: TimeInterval, useShake: Bool = true, subsystem: String? = nil, shouldShowLogs: Binding<Bool?> = .constant(nil), isEnabled: Binding<Bool> = .constant(true)) {
 		self.timeInterval = timeInterval
 		self.useShake = useShake
@@ -28,6 +40,7 @@ private struct ShakeLogSettingsKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
+	/// ShakeLogSettings environment value.
 	var shakeLogSettings: ShakeLogSettings? {
 		get { self[ShakeLogSettingsKey.self] }
 		set { self[ShakeLogSettingsKey.self] = newValue }

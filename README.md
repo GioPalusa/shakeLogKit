@@ -1,3 +1,5 @@
+### Updated Documentation
+
 # ShakeLogKit
 
 `ShakeLogKit` is a Swift package that enables logging and viewing logs in your iOS application when the device is shaken. This package leverages `OSLog` for logging and provides a simple `ViewModifier` to display the logs in a SwiftUI sheet.
@@ -26,7 +28,7 @@ Alternatively, add the following line to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/GioPalusa/shakeLogKit/")
+    .package(url: "https://github.com/GioPalusa/shakeLogKit/", branch: "main")
 ]
 ```
 
@@ -48,7 +50,7 @@ dependencies: [
    struct ContentView: View {
        var body: some View {
            Text("Hello, World!")
-               .enableShakeLogging()
+               .enableShakeLogging(nil)
        }
    }
    ```
@@ -65,14 +67,14 @@ dependencies: [
    import SwiftUI
    import ShakeLogKit
 
-   @State private var shouldShowLogs = false
+   @State private var shouldShowLogs: Bool? = nil
    @State private var isEnabled = true
 
    let settings = ShakeLogSettings(
-       timeInterval: -3600,             // Fetch logs from the last hour
-       useShake: true,                  // Enable shake gesture to show logs
-       subsystem: "com.example.app",    // Filter logs by subsystem
-       shouldShowLogs: $shouldShowLogs, // Binding to control log display, from a button or a state
+       timeInterval: -3600,            // Fetch logs from the last hour
+       useShake: true,                 // Enable shake gesture to show logs
+       subsystem: "com.example.app",   // Filter logs by subsystem
+       shouldShowLogs: $shouldShowLogs, // Binding to control log display
        isEnabled: $isEnabled            // Binding to enable or disable logging
    )
    ```
@@ -83,7 +85,7 @@ dependencies: [
 
    ```swift
    struct ContentView: View {
-       @State private var shouldShowLogs = false
+       @State private var shouldShowLogs: Bool? = nil
        @State private var isEnabled = true
 
        var body: some View {
@@ -101,7 +103,7 @@ dependencies: [
 
 ### Logging Messages
 
-Use the `ShakeLogFileManager` to log messages:
+You can use the `ShakeLogFileManager` to log messages, but this is not required if you are already using `OSLog` in your project:
 
 ```swift
 import ShakeLogKit
@@ -123,7 +125,7 @@ import ShakeLogKit
 
 @main
 struct MyApp: App {
-    @State private var shouldShowLogs = false
+    @State private var shouldShowLogs: Bool? = nil
     @State private var isEnabled = true
 
     var body: some Scene {
@@ -141,7 +143,7 @@ struct MyApp: App {
 }
 
 struct ContentView: View {
-    @State private var shouldShowLogs = false
+    @State private var shouldShowLogs: Bool? = nil
     @State private var isEnabled = true
 
     var body: some View {
@@ -163,3 +165,7 @@ struct ContentView: View {
     }
 }
 ```
+
+## License
+
+ShakeLogKit is released under the MIT license.
