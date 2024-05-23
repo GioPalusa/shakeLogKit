@@ -8,7 +8,7 @@
 import SwiftUI
 import OSLog
 
-public struct LogView: View {
+public struct ShakeLogView: View {
 	@Environment(\.presentationMode) var presentationMode
 	@State private var logs: [OSLogEntryLog] = []
 	@State private var searchText: String = ""
@@ -30,7 +30,7 @@ public struct LogView: View {
 				.padding(.horizontal)
 
 				List(filteredLogs.reversed(), id: \.self) { log in
-					NavigationLink(destination: LogDetailView(log: log)) {
+					NavigationLink(destination: ShakeLogDetailView(log: log)) {
 						Text(log.composedMessage)
 							.background(Color.black)
 							.foregroundColor(Color.white)
@@ -55,15 +55,13 @@ public struct LogView: View {
 				})
 				.onChange(of: showingExportSheet) { value in
 					guard value == true, let exportData = exportData else { return }
-					presentShareSheet(fileURL: exportData)
+					presentShakeShareSheet(fileURL: exportData)
 					showingExportSheet = false
 				}
 			}
 		}
-		.onAppear {
-			LogFileManager.shared.fetchLogs { fetchedLogs in
-				logs = fetchedLogs
-			}
+		.task {
+			logs = await ShakeLogFileManager.shared.fetchShakeLogs()
 		}
 	}
 
@@ -73,11 +71,11 @@ public struct LogView: View {
 		case .all:
 			filteredByType = logs
 		case .info:
-			filteredByType = logs.filter { $0.category == "INFO" }
+			filteredByType = logs.filter { $0.level == .info }
 		case .error:
-			filteredByType = logs.filter { $0.category == "ERROR" }
+			filteredByType = logs.filter { $0.level == .error }
 		case .debug:
-			filteredByType = logs.filter { $0.category == "DEBUG" }
+			filteredByType = logs.filter { $0.level == .debug }
 		}
 		if searchText.isEmpty {
 			return filteredByType
@@ -108,5 +106,5 @@ enum LogType: String, CaseIterable {
 }
 
 #Preview {
-	LogView()
+	ShakeLogView()
 }

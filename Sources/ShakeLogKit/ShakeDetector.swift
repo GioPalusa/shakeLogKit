@@ -9,14 +9,14 @@ import SwiftUI
 import Combine
 
 extension UIDevice {
-	static let deviceDidShake = Notification.Name(rawValue: "deviceDidShake")
+	static let ShakeLogDeviceDidShake = Notification.Name(rawValue: "deviceDidShake")
 }
 
 extension UIWindow {
 	override open func motionEnded(_ motion: UIEvent.EventSubtype, with: UIEvent?) {
 		guard motion == .motionShake else { return }
 
-		NotificationCenter.default.post(name: UIDevice.deviceDidShake, object: nil)
+		NotificationCenter.default.post(name: UIDevice.ShakeLogDeviceDidShake, object: nil)
 	}
 }
 
@@ -27,7 +27,7 @@ struct ShakeGestureViewModifier: ViewModifier {
 	func body(content: Content) -> some View {
 		content
 		// 2
-			.onReceive(NotificationCenter.default.publisher(for: UIDevice.deviceDidShake)) { _ in
+			.onReceive(NotificationCenter.default.publisher(for: UIDevice.ShakeLogDeviceDidShake)) { _ in
 				action()
 			}
 	}

@@ -8,7 +8,7 @@
 import SwiftUI
 import OSLog
 
-struct LogDetailView: View {
+struct ShakeLogDetailView: View {
 	var log: OSLogEntryLog
 	@State private var showingExportSheet = false
 	@State private var exportData: URL?
@@ -53,7 +53,7 @@ struct LogDetailView: View {
 		})
 		.onChange(of: showingExportSheet) { value in
 			guard value == true, let exportData = exportData else { return }
-			presentShareSheet(fileURL: exportData)
+			presentShakeShareSheet(fileURL: exportData)
 			showingExportSheet = false
 		}
 	}
@@ -77,5 +77,5 @@ struct LogDetailView: View {
 }
 
 #Preview {
-	LogDetailView(log: OSLogEntryLog())
+	ShakeLogDetailView(log: OSLogEntryLog())
 }

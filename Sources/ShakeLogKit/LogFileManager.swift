@@ -8,8 +8,8 @@
 import Foundation
 import OSLog
 
-public class LogFileManager {
-	public static let shared = LogFileManager()
+public class ShakeLogFileManager {
+	public static let shared = ShakeLogFileManager()
 	private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "ShakeLog")
 
 	private init() {}
@@ -18,20 +18,22 @@ public class LogFileManager {
 		logger.log("\(message, privacy: .public)")
 	}
 
-	public func fetchLogs(completion: @escaping ([OSLogEntryLog]) -> Void) {
-		let logStore = try? OSLogStore(scope: .currentProcessIdentifier)
-		let position = logStore?.position(timeIntervalSinceLatestBoot: -3600) // Fetch logs from the last hour
+	public func fetchShakeLogs() async -> [OSLogEntryLog] {
+		guard let logStore = try? OSLogStore(scope: .currentProcessIdentifier) else {
+			return []
+		}
+		let position = logStore.position(timeIntervalSinceLatestBoot: -3600)
 
-		if let entries = try? logStore?.getEntries(at: position) {
+		if let entries = try? logStore.getEntries(at: position) {
 			let logs: [OSLogEntryLog] = entries.compactMap { entry in
 				if let logEntry = entry as? OSLogEntryLog {
 					return logEntry
 				}
 				return nil
 			}
-			completion(logs)
+			return logs
 		} else {
-			completion([])
+			return []
 		}
 	}
 }

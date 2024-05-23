@@ -18,7 +18,7 @@ public struct ShakeLogModifier: ViewModifier {
 				showingLogs = true
 			}
 			.sheet(isPresented: $showingLogs) {
-				LogView()
+				ShakeLogView()
 			}
 	}
 }

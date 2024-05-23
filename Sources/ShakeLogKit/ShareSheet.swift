@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 
 /// Presents a share sheet for the given file URL.
 /// - Parameter fileURL: The URL of the file to be shared.
-internal func presentShareSheet(fileURL: URL) {
+internal func presentShakeShareSheet(fileURL: URL) {
 	let activityView = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
 	let scenes = UIApplication.shared.connectedScenes
 	if let windowScene = scenes.first as? UIWindowScene,
