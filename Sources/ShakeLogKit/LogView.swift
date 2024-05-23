@@ -16,6 +16,7 @@ public struct ShakeLogView: View {
 	@State private var selectedLogType: LogType = .all
 	@State private var showingExportSheet = false
 	@State private var exportData: URL?
+	@State private var filter: LogFilter?
 	private var timeInterval: TimeInterval
 	private var subsystem: String?
 
@@ -33,16 +34,35 @@ public struct ShakeLogView: View {
 	public var body: some View {
 		NavigationView {
 			VStack {
-				Picker("Log Type", selection: $selectedLogType) {
-					ForEach(LogType.allCases.filter { $0 != .subSystem || subsystem != nil }, id: \.self) { type in
-						Text(type.displayName).tag(type)
+				if filter == nil {
+					Picker("Log Type", selection: $selectedLogType) {
+						ForEach(LogType.allCases.filter { $0 != .subSystem || subsystem != nil }, id: \.self) { type in
+							Text(type.displayName).tag(type)
+						}
 					}
+					.pickerStyle(SegmentedPickerStyle())
+					.padding(.horizontal, subsystem == nil ? 16 : 0)
+				} else {
+					HStack {
+						Image(systemName: "line.3.horizontal.decrease.circle")
+							.foregroundStyle(.teal)
+						Text("\(filterDescription)")
+							.foregroundStyle(.teal)
+						Button(action: {
+							filter = nil
+						}, label: {
+							Image(systemName: "clear")
+								.font(.title3)
+						})
+						.foregroundStyle(.red)
+						.padding(.leading, 8)
+					}
+					.padding(.horizontal, 16)
+
 				}
-				.pickerStyle(SegmentedPickerStyle())
-				.padding(.horizontal, subsystem == nil ? 16 : 0)
 
 				List(filteredLogs.reversed(), id: \.self) { log in
-					NavigationLink(destination: ShakeLogDetailView(log: log)) {
+					NavigationLink(destination: ShakeLogDetailView(log: log, filter: $filter)) {
 						Text(log.composedMessage)
 							.font(.system(.body, design: .monospaced))
 							.frame(maxWidth: .infinity, alignment: .leading)
@@ -51,16 +71,16 @@ public struct ShakeLogView: View {
 				}
 				.searchable(text: $searchText)
 				.navigationBarItems(leading:
-					Button(action: {
-						isPresented.toggle()
-					}) {
-						Text("Dismiss")
-					}, trailing:
-					Button(action: {
-						exportLogs(logs)
-					}) {
-						Image(systemName: "square.and.arrow.up")
-					})
+										Button(action: {
+					isPresented.toggle()
+				}) {
+					Text("Dismiss")
+				}, trailing:
+										Button(action: {
+					exportLogs(logs)
+				}) {
+					Image(systemName: "square.and.arrow.up")
+				})
 
 				.onChange(of: showingExportSheet) { value in
 					guard value == true, let exportData = exportData else { return }
@@ -88,10 +108,39 @@ public struct ShakeLogView: View {
 		case .subSystem:
 			filteredByType = logs.filter { $0.subsystem == subsystem }
 		}
-		if !searchText.isEmpty {
-			return filteredByType.filter { $0.composedMessage.localizedCaseInsensitiveContains(searchText) }
+
+		let filteredBySearchText = filteredByType.filter {
+			searchText.isEmpty || $0.composedMessage.localizedCaseInsensitiveContains(searchText)
 		}
-		return filteredByType
+
+		if let filter = filter {
+			return filteredBySearchText.filter { filter.matches(log: $0) }
+		} else {
+			return filteredBySearchText
+		}
+	}
+
+	private var filterDescription: String {
+		switch filter {
+		case .timestamp(let date):
+			return "Timestamp: \(date.formatted())"
+		case .category(let category):
+			return "Category: \(category)"
+		case .subsystem(let subsystem):
+			return "Subsystem: \(subsystem)"
+		case .process(let process):
+			return "Process: \(process)"
+		case .thread(let thread):
+			return "Thread: \(thread)"
+		case .activityID(let activityID):
+			return "Activity ID: \(activityID)"
+		case .processID(let processID):
+			return "Process ID: \(processID)"
+		case .sender(let sender):
+			return "Sender: \(sender)"
+		case .none:
+			return "None"
+		}
 	}
 
 	private func exportLogs(_ logs: [OSLogEntryLog]) {
@@ -123,6 +172,38 @@ enum LogType: String, CaseIterable {
 			return "Debug"
 		case .subSystem:
 			return "Subsystem"
+		}
+	}
+}
+
+enum LogFilter: Equatable {
+	case timestamp(Date)
+	case category(String)
+	case subsystem(String)
+	case process(String)
+	case thread(Int)
+	case activityID(Int)
+	case processID(Int)
+	case sender(String)
+
+	func matches(log: OSLogEntryLog) -> Bool {
+		switch self {
+		case .timestamp(let date):
+			return log.date == date
+		case .category(let category):
+			return log.category == category
+		case .subsystem(let subsystem):
+			return log.subsystem == subsystem
+		case .process(let process):
+			return log.process == process
+		case .thread(let thread):
+			return log.threadIdentifier == thread
+		case .activityID(let activityID):
+			return log.activityIdentifier == activityID
+		case .processID(let processID):
+			return log.processIdentifier == processID
+		case .sender(let sender):
+			return log.sender == sender
 		}
 	}
 }

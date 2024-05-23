@@ -10,36 +10,30 @@ import OSLog
 
 struct ShakeLogDetailView: View {
 	var log: OSLogEntryLog
-	@State private var showingExportSheet = false
-	@State private var exportData: URL?
+	@Binding var filter: LogFilter?
 
 	var body: some View {
 		ScrollView {
+			if let jsonData = log.composedMessage.data(using: .utf8), let jsonString = prettyPrintJSON(jsonData) {
+				JSONHighlightView(jsonString: jsonString)
+			} else {
+				Text(log.composedMessage)
+					.padding()
+					.font(.system(.body, design: .monospaced))
+					.frame(maxWidth: .infinity, alignment: .leading)
+			}
+
+			Divider()
+			
 			VStack(alignment: .leading, spacing: 10) {
-				if let jsonData = log.composedMessage.data(using: .utf8), let jsonString = prettyPrintJSON(jsonData) {
-					JSONHighlightView(jsonString: jsonString)
-				} else {
-					Text(log.composedMessage)
-						.padding()
-						.font(.system(.body, design: .monospaced))
-						.frame(maxWidth: .infinity, alignment: .leading)
-				}
-
-				Divider()
-
-				VStack(alignment: .leading, spacing: 16) {
-					infoText(title: "Timestamp", body: log.date.formatted())
-					infoText(title: "Category", body: log.category)
-					infoText(title: "Subsystem", body: log.subsystem)
-					infoText(title: "Process", body: log.process)
-					infoText(title: "Thread", body: String(log.threadIdentifier))
-					infoText(title: "Activity ID", body: String(log.activityIdentifier))
-					infoText(title: "Process ID", body: String(log.processIdentifier))
-					infoText(title: "Sender", body: log.sender)
-				}
-				.padding()
-				.font(.system(.body, design: .monospaced))
-				.frame(maxWidth: .infinity, alignment: .leading)
+				logDetailRow(title: "Timestamp", value: log.date.formatted(), filter: .timestamp(log.date))
+				logDetailRow(title: "Category", value: log.category, filter: .category(log.category))
+				logDetailRow(title: "Subsystem", value: log.subsystem, filter: .subsystem(log.subsystem))
+				logDetailRow(title: "Process", value: log.process, filter: .process(log.process))
+				logDetailRow(title: "Thread", value: "\(log.threadIdentifier)", filter: .thread(Int(log.threadIdentifier)))
+				logDetailRow(title: "Activity ID", value: "\(log.activityIdentifier)", filter: .activityID(Int(log.activityIdentifier)))
+				logDetailRow(title: "Process ID", value: "\(log.processIdentifier)", filter: .processID(Int(log.processIdentifier)))
+				logDetailRow(title: "Sender", value: log.sender, filter: .sender(log.sender))
 			}
 			.padding()
 		}
@@ -49,34 +43,39 @@ struct ShakeLogDetailView: View {
 		}) {
 			Image(systemName: "square.and.arrow.up")
 		})
-		.onChange(of: showingExportSheet) { value in
-			guard value == true, let exportData = exportData else { return }
-			presentShakeShareSheet(fileURL: exportData)
-			showingExportSheet = false
-		}
 	}
 
-	private func infoText(title: String, body: String) -> Text {
-		Text("\(title)\n").bold() + Text(body)
+	private func logDetailRow(title: String, value: String, filter: LogFilter) -> some View {
+		HStack {
+			VStack(alignment: .leading) {
+				Text(title).bold()
+				Text(value)
+			}
+			Spacer()
+			Button(action: {
+				self.filter = self.filter == filter ? nil : filter
+			}) {
+				if self.filter == filter {
+					Text("Filter")
+						.padding(4)
+						.background(Color.teal)
+						.foregroundColor(.white)
+						.cornerRadius(4)
+				} else {
+					Text("Filter")
+						.padding(4)
+						.foregroundColor(.teal)
+						.overlay(
+							RoundedRectangle(cornerRadius: 4)
+								.stroke(Color.teal, lineWidth: 1)
+						)
+				}
+			}
+		}
+		.padding(.vertical, 4)
 	}
 
 	private func exportLog(_ log: OSLogEntryLog) {
-		do {
-			exportData = try ShakeLogExporter.exportLogs([log])
-			showingExportSheet = true
-		} catch {
-			print("Failed to export log: \(error)")
-		}
-	}
-
-	private func prettyPrintJSON(_ jsonData: Data) -> String? {
-		do {
-			let jsonObject = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers)
-			let prettyJsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
-			return String(data: prettyJsonData, encoding: .utf8)
-		} catch {
-			print("Failed to pretty print JSON: \(error)")
-			return nil
-		}
+		// Your export logic here
 	}
 }
