@@ -27,9 +27,6 @@ public class ShakeLogFileManager {
 		if let entries = try? logStore.getEntries(at: position) {
 			let logs: [OSLogEntryLog] = entries.compactMap { entry in
 				if let logEntry = entry as? OSLogEntryLog {
-					if let subsystem = subsystem {
-						return logEntry.subsystem == subsystem ? logEntry : nil
-					}
 					return logEntry
 				}
 				return nil

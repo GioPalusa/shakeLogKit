@@ -16,8 +16,6 @@ public struct ShakeLogSettings {
 	public var subsystem: String?
 	/// Binding to control whether the logs should be shown.
 	@Binding public var shouldShowLogs: Bool?
-	/// Binding to control whether logging is enabled.
-	@Binding public var isEnabled: Bool
 
 	/// Initializes a new instance of ShakeLogSettings.
 	/// - Parameters:
@@ -25,13 +23,11 @@ public struct ShakeLogSettings {
 	///   - useShake: Whether to use shake gesture to trigger log display.
 	///   - subsystem: Subsystem name to filter logs by.
 	///   - shouldShowLogs: Binding to control whether the logs should be shown.
-	///   - isEnabled: Binding to control whether logging is enabled.
-	public init(timeInterval: TimeInterval, useShake: Bool = true, subsystem: String? = nil, shouldShowLogs: Binding<Bool?> = .constant(nil), isEnabled: Binding<Bool> = .constant(true)) {
+	public init(timeInterval: TimeInterval, useShake: Bool = true, subsystem: String? = nil, shouldShowLogs: Binding<Bool?> = .constant(nil)) {
 		self.timeInterval = timeInterval
 		self.useShake = useShake
 		self.subsystem = subsystem
 		self._shouldShowLogs = shouldShowLogs
-		self._isEnabled = isEnabled
 	}
 }
 

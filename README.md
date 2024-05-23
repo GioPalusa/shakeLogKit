@@ -1,5 +1,3 @@
-### Updated Documentation
-
 # ShakeLogKit
 
 `ShakeLogKit` is a Swift package that enables logging and viewing logs in your iOS application when the device is shaken. This package leverages `OSLog` for logging and provides a simple `ViewModifier` to display the logs in a SwiftUI sheet.
@@ -50,7 +48,7 @@ dependencies: [
    struct ContentView: View {
        var body: some View {
            Text("Hello, World!")
-               .enableShakeLogging(nil)
+               .enableShakeLogging()
        }
    }
    ```
@@ -68,20 +66,18 @@ dependencies: [
    import ShakeLogKit
 
    @State private var shouldShowLogs: Bool? = nil
-   @State private var isEnabled = true
 
    let settings = ShakeLogSettings(
        timeInterval: -3600,            // Fetch logs from the last hour
        useShake: true,                 // Enable shake gesture to show logs
        subsystem: "com.example.app",   // Filter logs by subsystem
-       shouldShowLogs: $shouldShowLogs, // Binding to control log display
-       isEnabled: $isEnabled            // Binding to enable or disable logging
+       shouldShowLogs: $shouldShowLogs // Binding to control log display
    )
    ```
 
 2. **Apply Settings:**
 
-   Pass the settings to the `enableShakeLogging` modifier:
+   Pass the settings and the `isEnabled` binding to the `enableShakeLogging` modifier:
 
    ```swift
    struct ContentView: View {
@@ -90,13 +86,15 @@ dependencies: [
 
        var body: some View {
            Text("Hello, World!")
-               .enableShakeLogging(ShakeLogSettings(
-                   timeInterval: -3600,
-                   useShake: true,
-                   subsystem: "com.example.app",
-                   shouldShowLogs: $shouldShowLogs,
+               .enableShakeLogging(
+                   ShakeLogSettings(
+                       timeInterval: -3600,
+                       useShake: true,
+                       subsystem: "com.example.app",
+                       shouldShowLogs: $shouldShowLogs
+                   ),
                    isEnabled: $isEnabled
-               ))
+               )
        }
    }
    ```
@@ -131,13 +129,15 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .enableShakeLogging(ShakeLogSettings(
-                    timeInterval: -3600,
-                    useShake: true,
-                    subsystem: "com.example.app",
-                    shouldShowLogs: $shouldShowLogs,
+                .enableShakeLogging(
+                    ShakeLogSettings(
+                        timeInterval: -3600,
+                        useShake: true,
+                        subsystem: "com.example.app",
+                        shouldShowLogs: $shouldShowLogs
+                    ),
                     isEnabled: $isEnabled
-                ))
+                )
         }
     }
 }
@@ -155,13 +155,15 @@ struct ContentView: View {
                 ShakeLogFileManager.shared.log("This is a test log message.")
             }
         }
-        .enableShakeLogging(ShakeLogSettings(
-            timeInterval: -3600,
-            useShake: true,
-            subsystem: "com.example.app",
-            shouldShowLogs: $shouldShowLogs,
+        .enableShakeLogging(
+            ShakeLogSettings(
+                timeInterval: -3600,
+                useShake: true,
+                subsystem: "com.example.app",
+                shouldShowLogs: $shouldShowLogs
+            ),
             isEnabled: $isEnabled
-        ))
+        )
     }
 }
 ```
