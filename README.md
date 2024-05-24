@@ -15,6 +15,8 @@
 - iOS 15.0+
 - Swift 5.9+
 
+![shakelogkit-demo](https://github.com/GioPalusa/shakeLogKit/assets/16545448/4b75f27e-8d80-4232-b9a1-6e2c5e295989)
+
 ## Installation
 
 ### Swift Package Manager
@@ -30,6 +32,7 @@ dependencies: [
     .package(url: "https://github.com/GioPalusa/shakeLogKit/", branch: "main")
 ]
 ```
+
 
 ## Usage
 
@@ -180,32 +183,3 @@ struct ContentView: View {
 ## License
 
 ShakeLogKit is released under the MIT license.
-
-```swift
-// swift-tools-version: 5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
-import PackageDescription
-
-let package = Package(
-	name: "ShakeLogKit",
-	platforms: [
-		.iOS(.v15)
-	],
-	products: [
-		.library(
-			name: "ShakeLogKit",
-			targets: ["ShakeLogKit"])
-	],
-	targets: [
-		.target(
-			name: "ShakeLogKit",
-			dependencies: []),
-		.testTarget(
-			name: "ShakeLogKitTests",
-			dependencies: ["ShakeLogKit"])
-	]
-)
-```
-
-Feel free to make any additional adjustments to fit your specific needs.
