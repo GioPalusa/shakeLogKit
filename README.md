@@ -1,12 +1,13 @@
+![shakelogkit-logo](https://github.com/GioPalusa/shakeLogKit/assets/16545448/37d003a5-0808-4e73-95c2-20bb85e43dfb)
 # ShakeLogKit
 
-`ShakeLogKit` is a Swift package that enables logging and viewing logs in your iOS application when the device is shaken. This package leverages `OSLog` for logging and provides a simple `ViewModifier` to display the logs in a SwiftUI sheet.
+`ShakeLogKit` is a Swift package that enables logging and viewing logs in your iOS application when the device is shaken or activated by a button. This package leverages `OSLog` for logging and provides a simple `ViewModifier` to display the logs in a SwiftUI full screen page.
 
 ## Features
 
 - Detect shake gestures and trigger custom actions.
 - Log messages using `OSLog`.
-- Display logs in a SwiftUI sheet when the device is shaken.
+- Display logs in a SwiftUI sheet when the device is shaken or activated by a button.
 - Customize logging settings including time intervals, subsystem filters, and shake gesture usage.
 
 ## Requirements
