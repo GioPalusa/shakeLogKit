@@ -23,10 +23,12 @@ public class ShakeLogFileManager {
 			return []
 		}
 		let position = logStore.position(timeIntervalSinceLatestBoot: timeInterval)
+		let normalizedSubsystem = subsystem?.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		if let entries = try? logStore.getEntries(at: position) {
 			let logs: [OSLogEntryLog] = entries.compactMap { entry in
-				if let logEntry = entry as? OSLogEntryLog {
+				if let logEntry = entry as? OSLogEntryLog,
+				   normalizedSubsystem.map({ !($0.isEmpty) && logEntry.subsystem != $0 }) != true {
 					return logEntry
 				}
 				return nil
