@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+enum LogMessageSegment: Equatable {
+	case text(String)
+	case json(String)
+}
+
 /// Function to pretty print JSON data
 func prettyPrintJSON(_ data: Data) -> String? {
 	if let jsonObject = try? JSONSerialization.jsonObject(with: data),
@@ -14,6 +19,83 @@ func prettyPrintJSON(_ data: Data) -> String? {
 	   let prettyString = String(data: prettyData, encoding: .utf8) {
 		return prettyString
 	}
+	return nil
+}
+
+func extractLogMessageSegments(from message: String) -> [LogMessageSegment] {
+	var segments: [LogMessageSegment] = []
+	var cursor = message.startIndex
+
+	func appendText(_ text: String) {
+		guard !text.isEmpty else { return }
+		if case .text(let existing)? = segments.last {
+			segments[segments.count - 1] = .text(existing + text)
+		} else {
+			segments.append(.text(text))
+		}
+	}
+
+	while cursor < message.endIndex {
+		guard let jsonStart = message[cursor...].firstIndex(where: { $0 == "{" || $0 == "[" }) else {
+			appendText(String(message[cursor...]))
+			break
+		}
+
+		appendText(String(message[cursor..<jsonStart]))
+
+		if let (prettyJSON, endIndex) = extractPrettyJSON(from: message, at: jsonStart) {
+			segments.append(.json(prettyJSON))
+			cursor = endIndex
+		} else {
+			appendText(String(message[jsonStart]))
+			cursor = message.index(after: jsonStart)
+		}
+	}
+
+	return segments
+}
+
+private func extractPrettyJSON(from message: String, at start: String.Index) -> (String, String.Index)? {
+	let root = message[start]
+	guard root == "{" || root == "[" else { return nil }
+
+	var depth = 0
+	var current = start
+	var isInsideString = false
+	var isEscaping = false
+
+	while current < message.endIndex {
+		let char = message[current]
+
+		if isInsideString {
+			if isEscaping {
+				isEscaping = false
+			} else if char == "\\" {
+				isEscaping = true
+			} else if char == "\"" {
+				isInsideString = false
+			}
+		} else {
+			if char == "\"" {
+				isInsideString = true
+			} else if char == "{" || char == "[" {
+				depth += 1
+			} else if char == "}" || char == "]" {
+				depth -= 1
+				if depth == 0 {
+					let end = message.index(after: current)
+					let candidate = String(message[start..<end])
+					if let data = candidate.data(using: .utf8), let prettyJSON = prettyPrintJSON(data) {
+						return (prettyJSON, end)
+					}
+					return nil
+				}
+			}
+		}
+
+		current = message.index(after: current)
+	}
+
 	return nil
 }
 

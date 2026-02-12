@@ -10,6 +10,11 @@ import OSLog
 
 /// A structure responsible for exporting and reading logs.
 public struct ShakeLogExporter {
+	private static let dateFormatter: ISO8601DateFormatter = {
+		let formatter = ISO8601DateFormatter()
+		formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+		return formatter
+	}()
 
 	/// Exports logs to a file.
 	/// - Parameter logs: The array of OSLogEntryLog to be exported.
@@ -17,7 +22,6 @@ public struct ShakeLogExporter {
 	/// - Throws: An error if the file could not be written.
 	public static func exportLogs(_ logs: [OSLogEntryLog]) async throws -> Data? {
 		let logText = logs.map { logEntry in
-			let dateFormatter = ISO8601DateFormatter()
 			let dateStr = dateFormatter.string(from: logEntry.date)
 			return """
 			\(dateStr): t=\(logEntry.threadIdentifier): \(logEntry.level): \(logEntry.subsystem): \(logEntry.composedMessage)
