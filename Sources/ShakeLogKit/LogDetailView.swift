@@ -16,14 +16,20 @@ struct ShakeLogDetailView: View {
 
 	var body: some View {
 		ScrollView {
-			if let jsonData = log.composedMessage.data(using: .utf8), let jsonString = prettyPrintJSON(jsonData) {
-				JSONHighlightView(jsonString: jsonString)
-			} else {
-				Text(log.composedMessage)
-					.padding()
-					.font(.system(.body, design: .monospaced))
-					.frame(maxWidth: .infinity, alignment: .leading)
+			VStack(alignment: .leading, spacing: 8) {
+				ForEach(Array(extractLogMessageSegments(from: log.composedMessage).enumerated()), id: \.offset) { _, segment in
+					switch segment {
+					case .text(let text):
+						Text(text)
+							.font(.system(.body, design: .monospaced))
+							.frame(maxWidth: .infinity, alignment: .leading)
+					case .json(let jsonString):
+						JSONHighlightView(jsonString: jsonString)
+							.frame(maxWidth: .infinity, alignment: .leading)
+					}
+				}
 			}
+			.padding()
 
 			Divider()
 			

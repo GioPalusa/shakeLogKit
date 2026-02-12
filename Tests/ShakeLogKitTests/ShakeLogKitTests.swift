@@ -33,4 +33,42 @@ final class ShakeLogKitTests: XCTestCase {
 
 		XCTAssertEqual(logs, ["first", "second", "third"])
 	}
+
+	func testExtractLogMessageSegmentsParsesEmbeddedJSONObject() {
+		let message = "RESPONSE: 200\nHeaders:\n{\"Content-Type\":\"application/json\"}\nBody done"
+
+		let segments = extractLogMessageSegments(from: message)
+
+		XCTAssertEqual(segments.count, 3)
+		XCTAssertEqual(segments[0], .text("RESPONSE: 200\nHeaders:\n"))
+		if case .json(let json) = segments[1] {
+			XCTAssertTrue(json.contains("\"Content-Type\""))
+		} else {
+			XCTFail("Expected JSON segment")
+		}
+		XCTAssertEqual(segments[2], .text("\nBody done"))
+	}
+
+	func testExtractLogMessageSegmentsParsesEmbeddedJSONArray() {
+		let message = "Body:\n[{\"id\":1},{\"id\":2}]"
+
+		let segments = extractLogMessageSegments(from: message)
+
+		XCTAssertEqual(segments.count, 2)
+		XCTAssertEqual(segments[0], .text("Body:\n"))
+		if case .json(let json) = segments[1] {
+			XCTAssertTrue(json.contains("\"id\""))
+		} else {
+			XCTFail("Expected JSON array segment")
+		}
+	}
+
+	func testExtractLogMessageSegmentsFallsBackToTextForInvalidJSON() {
+		let message = "Not JSON: {missing:true"
+
+		let segments = extractLogMessageSegments(from: message)
+
+		XCTAssertEqual(segments, [.text(message)])
+	}
+
 }
